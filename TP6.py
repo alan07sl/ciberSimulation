@@ -7,7 +7,10 @@ totalArgs = len(sys.argv)
 if totalArgs != 2:
 	exit(u"Esta simulación recibe una variable de control N (Cantidad de puestos de atención)")
 
-N = int(sys.argv[1])
+try:
+	N = int(sys.argv[1])
+except:
+	exit(u"N debe ser el número de equipos a simular.")
 
 def inicializarColas(N):
 	for elem in range(N):
