@@ -31,7 +31,6 @@ def condicionesIniciales():
 	TF = 13140000
 	IA = 0
 	TA = 0
-	ARREP = False
 	TPS = []
 	ITO = []
 	STO = []
@@ -40,13 +39,8 @@ def condicionesIniciales():
 	inicializarColas()
 
 def menorTPS(): 
-	min = HV
-	minIndex = 0
-	for index in range(len(TPS)):
-		if TPS[index] < min:
-			min = TPS[index]
-			minIndex = index
-	return minIndex
+	i = TPS.index(min(TPS))
+	return i
 
 def HVTPS():
 	maxIndex = 0
@@ -67,17 +61,17 @@ def generarTA():
 	return TA
 
 def calcularArrep():
-	global ARREP
-	if NS - N > 4: ARREP = True
-	else:
-		ARREP = random.random() < 0.8
-	return ARREP
+	if NS - N >= 8: 
+		return True
+	elif NS - N >=4 and NS - N < 8:
+		return random.random() < 0.5
+	else: 
+		return False
 
 def calcularEImprimirResultados():
-
 	PPS = SPS * 1.0 / CLL
 	PTO = [ e * 100.0 / T for e in STO ]
-	PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
+	PPA = CANTARREP * 100.0 / (CLL)
 
 	print "Resultados de la simulacion para N = %d :" % N
 	print "PPS=%d" % PPS
@@ -98,17 +92,19 @@ if __name__ == "__main__":
 			T = TPLL
 			IA = generarIA()
 			TPLL = T + IA
-			calcularArrep()
+			ARREP = False
+			ARREP = calcularArrep()
 			if ARREP:
 				CANTARREP += 1
 				continue
-			NS += 1
-			CLL += 1
-			if NS <= N:
-				TA = generarTA()
-				HVTPSindex = HVTPS()
-				TPS[HVTPSindex] = T + TA
-				STO[HVTPSindex] += T - ITO[HVTPSindex]
+			else:
+				NS += 1
+				CLL += 1
+				if NS <= N:
+					TA = generarTA()
+					HVTPSindex = HVTPS()
+					TPS[HVTPSindex] = T + TA
+					STO[HVTPSindex] += T - ITO[HVTPSindex]
 		else:
 			SPS += (TPS[MENORTPS] - T) * NS
 			T = TPS[MENORTPS]
