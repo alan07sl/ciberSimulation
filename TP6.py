@@ -19,16 +19,16 @@ def inicializarColas():
 		STO.append(0)
 
 def condicionesIniciales():
-	global MENORTPS, CANTARREP, TPLL, STS, NS, CLL, T, TF, IA, TA, ARREP, TPS, ITO, STO
+	global MENORTPS, CANTARREP, TPLL, SPS, NS, CLL, T, TF, IA, TA, ARREP, TPS, ITO, STO
 
 	MENORTPS = 0
 	CANTARREP = 0
 	TPLL = 0
-	STS = 0
+	SPS = 0
 	NS = 0
-	CLL =0
+	CLL = 0
 	T = 0
-	TF = 1000000
+	TF = 13140000
 	IA = 0
 	TA = 0
 	ARREP = False
@@ -61,21 +61,21 @@ def generarIA():
 	if R < 0.1:
 		IA = 5
 	elif R < 0.3:
-		IA = 30
+		IA = 10
 	elif R < 0.8:
-		IA = 45
+		IA = 15
 	else:
-		IA = 60
+		IA = 20
 	return IA
 
 def generarTA():
 	R = random.random()
 	if R < 0.1:
-		TA = 5
+		TA = 20
 	elif R < 0.2:
-		TA = 10
+		TA = 30
 	elif R < 0.3:
-		TA = 15
+		TA = 45
 	elif R < 0.5:
 		TA = 60
 	elif R < 0.7:
@@ -86,18 +86,33 @@ def generarTA():
 
 def calcularArrep():
 	global ARREP
-	if NS > 3: ARREP = True
+	if NS - N > 3: ARREP = True
 	else:
 		ARREP = random.random() < 0.8
 	return ARREP
 
+def calcularEImprimirResultados():
+
+	PPS = SPS * 1.0 / CLL
+	PTO = [ e * 100.0 / T for e in STO ]
+	PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
+
+	print "Resultados de la simulación para N=%d:" % N
+	print "PPS=%d" % PPS
+	print "PTO=" + repr([int(round(e)) for e in PTO])
+	print "PPA=%d" % PPA
+
 if __name__ == "__main__":
 	condicionesIniciales()
 
+	print "Simulando con N=%d…" % N
+
 	while T < TF or NS > 0:
+
 		MENORTPS = menorTPS()
+
 		if TPLL <= TPS[MENORTPS]:
-			STS += ((TPLL - T) * NS)
+			SPS += (TPLL - T) * NS
 			T = TPLL
 			IA = generarIA()
 			TPLL = T + IA
@@ -107,13 +122,13 @@ if __name__ == "__main__":
 				continue
 			NS += 1
 			CLL += 1
-			if NS < N:
+			if NS <= N:
 				TA = generarTA()
 				HVTPSindex = HVTPS()
 				TPS[HVTPSindex] = T + TA
-				STO[HVTPSindex] += (T - ITO(HVTPSindex))
+				STO[HVTPSindex] += T - ITO[HVTPSindex]
 		else:
-			STS += ((TPS[MENORTPS] - T) * NS)
+			SPS += (TPS[MENORTPS] - T) * NS
 			T = TPS[MENORTPS]
 			NS -= 1
 			if NS >= N:
@@ -125,4 +140,4 @@ if __name__ == "__main__":
 		if T >= TF and NS > 0:
 			TPLL = HV
 
-# calcular los valores
+	calcularEImprimirResultados()
