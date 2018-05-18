@@ -4,13 +4,13 @@ HV = sys.maxint
 
 def obtenerN():
 	if len(sys.argv) != 2:
-		exit(u"Esta simulación recibe una variable de control N (Cantidad de puestos de atención)")
+		exit(u"Esta simulacion recibe una variable de control N (Cantidad de puestos de atencion)")
 
 	try:
 		global N
 		N = int(sys.argv[1])
 	except:
-		exit(u"N debe ser el número de equipos a simular.")
+		exit(u"N debe ser el numero de equipos a simular.")
 
 def inicializarColas():
 	for elem in range(N):
@@ -39,7 +39,7 @@ def condicionesIniciales():
 	obtenerN()
 	inicializarColas()
 
-def menorTPS():
+def menorTPS(): 
 	min = HV
 	minIndex = 0
 	for index in range(len(TPS)):
@@ -58,35 +58,17 @@ def HVTPS():
 
 def generarIA():
 	R = random.random()
-	if R < 0.1:
-		IA = 5
-	elif R < 0.3:
-		IA = 10
-	elif R < 0.8:
-		IA = 15
-	else:
-		IA = 20
+	IA = int((R * 1000) % 15)
 	return IA
 
 def generarTA():
 	R = random.random()
-	if R < 0.1:
-		TA = 20
-	elif R < 0.2:
-		TA = 30
-	elif R < 0.3:
-		TA = 45
-	elif R < 0.5:
-		TA = 60
-	elif R < 0.7:
-		TA = 120
-	else:
-		TA = 240
+	TA = int(( 10 + (R * 500) % 120))
 	return TA
 
 def calcularArrep():
 	global ARREP
-	if NS - N > 3: ARREP = True
+	if NS - N > 4: ARREP = True
 	else:
 		ARREP = random.random() < 0.8
 	return ARREP
@@ -97,7 +79,7 @@ def calcularEImprimirResultados():
 	PTO = [ e * 100.0 / T for e in STO ]
 	PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
 
-	print "Resultados de la simulación para N=%d:" % N
+	print "Resultados de la simulacion para N = %d :" % N
 	print "PPS=%d" % PPS
 	print "PTO=" + repr([int(round(e)) for e in PTO])
 	print "PPA=%d" % PPA
@@ -105,7 +87,7 @@ def calcularEImprimirResultados():
 if __name__ == "__main__":
 	condicionesIniciales()
 
-	print "Simulando con N=%d…" % N
+	print "Simulando con N = %d " % N
 
 	while T < TF or NS > 0:
 
