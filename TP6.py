@@ -1,6 +1,6 @@
 # encoding: utf-8
 import sys, random
-HV = sys.maxint
+HV = float("inf")
 
 def obtenerN():
 	if len(sys.argv) != 2:
@@ -38,9 +38,8 @@ def condicionesIniciales():
 	obtenerN()
 	inicializarColas()
 
-def menorTPS(): 
-	i = TPS.index(min(TPS))
-	return i
+def menorTPS():
+	return TPS.index(min(TPS))
 
 def HVTPS():
 	maxIndex = 0
@@ -52,28 +51,26 @@ def HVTPS():
 
 def generarIA():
 	R = random.random()
-	IA = int((R * 1000) % 15)
+	IA = int((R * 1000) % 30)
 	return IA
 
 def generarTA():
 	R = random.random()
-	TA = int(( 10 + (R * 500) % 120))
+	TA = int(10 + (R * 500) % 120)
 	return TA
 
 def calcularArrep():
-	if NS - N >= 8: 
-		return True
-	elif NS - N >=4 and NS - N < 8:
-		return random.random() < 0.5
-	else: 
-		return False
+	global ARREP
+	if NS - N >= 8: ARREP = True
+	elif NS - N >= 4: ARREP = random.random() < 0.6
+	else: ARREP = False
 
 def calcularEImprimirResultados():
 	PPS = SPS * 1.0 / CLL
 	PTO = [ e * 100.0 / T for e in STO ]
-	PPA = CANTARREP * 100.0 / (CLL)
+	PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
 
-	print "Resultados de la simulacion para N = %d :" % N
+	print "Resultados de la simulacion para N = %d:" % N
 	print "PPS=%d" % PPS
 	print "PTO=" + repr([int(round(e)) for e in PTO])
 	print "PPA=%d" % PPA
@@ -81,7 +78,7 @@ def calcularEImprimirResultados():
 if __name__ == "__main__":
 	condicionesIniciales()
 
-	print "Simulando con N = %d " % N
+	print "Simulando con N = %d..." % N
 
 	while T < TF or NS > 0:
 
@@ -92,19 +89,17 @@ if __name__ == "__main__":
 			T = TPLL
 			IA = generarIA()
 			TPLL = T + IA
-			ARREP = False
-			ARREP = calcularArrep()
+			calcularArrep()
 			if ARREP:
 				CANTARREP += 1
 				continue
-			else:
-				NS += 1
-				CLL += 1
-				if NS <= N:
-					TA = generarTA()
-					HVTPSindex = HVTPS()
-					TPS[HVTPSindex] = T + TA
-					STO[HVTPSindex] += T - ITO[HVTPSindex]
+			NS += 1
+			CLL += 1
+			if NS <= N:
+				TA = generarTA()
+				HVTPSindex = HVTPS()
+				TPS[HVTPSindex] = T + TA
+				STO[HVTPSindex] += T - ITO[HVTPSindex]
 		else:
 			SPS += (TPS[MENORTPS] - T) * NS
 			T = TPS[MENORTPS]
@@ -117,5 +112,8 @@ if __name__ == "__main__":
 				TPS[MENORTPS] = HV
 		if T >= TF and NS > 0:
 			TPLL = HV
+
+	for i in range(len(STO)):
+		STO[i] += T - ITO[i]
 
 	calcularEImprimirResultados()
