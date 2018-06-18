@@ -1,119 +1,182 @@
 # encoding: utf-8
+
+''' 
+Simulador de cibercafé
+Modo de uso: TP6.py <G> <W>
+Donde G y W son variables de control:
+ G: cantidad de máquinas para juegos (gaming PCs)
+ W: cantidad de estaciones de trabajo (workstations)
+'''
+
 import sys, random
 HV = float("inf")
 
-def obtenerN():
-	if len(sys.argv) != 2:
-		exit(u"Esta simulacion recibe una variable de control N (Cantidad de puestos de atencion)")
+def VariablesDeControl():
+	global G, W
 
 	try:
-		global N
-		N = int(sys.argv[1])
-	except:
-		exit(u"N debe ser el numero de equipos a simular.")
+		if len(sys.argv) == 3:
+			G = int(sys.argv[1])
+			W = int(sys.argv[2])
+		else:
+			G = int(raw_input('G='))
+			W = int(raw_input('W='))
+	except ValueError:
+		print 'Error: G y W deben ser valores enteros.'
+		exit(1)
 
-def inicializarColas():
-	for elem in range(N):
-		TPS.append(HV)
-		ITO.append(0)
-		STO.append(0)
+def CondicionesIniciales():
+	global T, TF, TPLL, TPSW, TPSG, NSW, NSG, CLL, \
+			ITOW, ITOG, STOW, STOG, CARRW, CARRG
 
-def condicionesIniciales():
-	global MENORTPS, CANTARREP, TPLL, SPS, NS, CLL, T, TF, IA, TA, ARREP, TPS, ITO, STO
-
-	MENORTPS = 0
-	CANTARREP = 0
-	TPLL = 0
-	SPS = 0
-	NS = 0
-	CLL = 0
 	T = 0
-	TF = 13140000
-	IA = 0
-	TA = 0
-	TPS = []
-	ITO = []
-	STO = []
+	TF = 10000 # 13140000
 
-	obtenerN()
-	inicializarColas()
+	TPLL = 0
+	TPSW = [HV for _ in xrange(W)]
+	TPSG = [HV for _ in xrange(G)]
 
-def menorTPS():
-	return TPS.index(min(TPS))
+	NSW = NSG = CLL = 0
 
-def HVTPS():
-	maxIndex = 0
-	for index in range(len(TPS)):
-		if TPS[index] == HV:
-			maxIndex = index
-			break
-	return maxIndex
+	ITOW = [0 for _ in xrange(W)]
+	ITOG = [0 for _ in xrange(G)]
 
-def generarIA():
+	STOW = ITOW[:]
+	STOG = ITOG[:]
+
+	CARRW = CARRG = 0
+
+def MinTPSWorker():
+	return TPSW.index(min(TPSW))
+
+def MinTPSGamer():
+	return TPSG.index(min(TPSG))
+
+def HVTPS(TPS):
+	return TPS.index(HV)
+
+def GenerarIA():
 	R = random.random()
 	IA = int((R * 1000) % 30)
 	return IA
 
-def generarTA():
+def GenerarTA():
 	R = random.random()
 	TA = int(10 + (R * 500) % 120)
 	return TA
 
-def calcularArrep():
-	global ARREP
-	if NS - N >= 8: ARREP = True
-	elif NS - N >= 4: ARREP = random.random() < 0.6
-	else: ARREP = False
+def ArrepentimientoWorker():
+	global NSW, W
+	return NSW - W > 3
 
-def calcularEImprimirResultados():
-	PPS = SPS * 1.0 / CLL
-	PTO = [ e * 100.0 / T for e in STO ]
-	PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
+def ArrepentimientoGamer():
+	global NSG, G
+	return NSG - G > 5
 
-	print "Resultados de la simulacion para N = %d:" % N
-	print "PPS=%d" % PPS
-	print "PTO=" + repr([int(round(e)) for e in PTO])
-	print "PPA=%d" % PPA
+def EntraWorker():
+	global NSW, CLL, W, T, TPSW, STOW, ITOW
+	NSW += 1
+	CLL += 1
+	if W > NSW:
+		i = HVTPS(TPSW)
+		TA = GenerarTA()
+		TPSW[i] = T + TA
+		STOW[i] += T - ITOW[i]
+
+def Worker():
+	global NSW, W, NSG, G
+	if NSW >= W:
+		if NSG < G:
+			R = random.random()
+			if R < 0.15:
+				Gamer()
+			else:
+				ARR = ArrepentimientoWorker()
+				if not ARR:
+					EntraWorker()
+		else:
+			ARR = ArrepentimientoWorker()
+			if not ARR:
+				EntraWorker()
+	else:
+		EntraWorker()
+
+def Gamer():
+	global NSG, CLL, G, T, TPSG, STOG, ITOG
+	ARR = ArrepentimientoGamer()
+	if not ARR:
+		NSG += 1
+		CLL += 1
+		if G > NSG:
+			i = HVTPS(TPSG)
+			TA = GenerarTA()
+			TPSG[i] = T + TA
+			STOG[i] += T - ITOG[i]
+
+
+def LlegaCliente():
+	global T, TPLL
+	T = TPLL
+	IA = GenerarIA()
+	TPLL = T + IA
+
+	R = random.random()
+	if R < 0.7:
+		Gamer()
+	else:
+		Worker()
+
+def Sale(TPS, i, NS, M, ITO):
+	global T
+	T = TPS[i]
+	NS -= 1
+
+	if NS < M:
+		ITO[i] = T
+		TPS[i] = HV
+	else:
+		TA = GenerarTA()
+		TPS[i] = T + TA
+
+def ImprimirResultados():
+	pass
+	# TODO
+	# PPS = SPS * 1.0 / CLL
+	# PTO = [ e * 100.0 / T for e in STO ]
+	# PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
+
+	# print "Resultados de la simulacion para N = %d:" % N
+	# print "PPS=%d" % PPS
+	# print "PTO=" + repr([int(round(e)) for e in PTO])
+	# print "PPA=%d" % PPA
 
 if __name__ == "__main__":
-	condicionesIniciales()
+	VariablesDeControl()
+	CondicionesIniciales()
 
-	print "Simulando con N = %d..." % N
+	print "Simulando con G=%d, W=%d..." % (G, W)
 
-	while T < TF or NS > 0:
+	while True:
+		i = MinTPSWorker()
+		j = MinTPSGamer()
 
-		MENORTPS = menorTPS()
-
-		if TPLL <= TPS[MENORTPS]:
-			SPS += (TPLL - T) * NS
-			T = TPLL
-			IA = generarIA()
-			TPLL = T + IA
-			calcularArrep()
-			if ARREP:
-				CANTARREP += 1
-				continue
-			NS += 1
-			CLL += 1
-			if NS <= N:
-				TA = generarTA()
-				HVTPSindex = HVTPS()
-				TPS[HVTPSindex] = T + TA
-				STO[HVTPSindex] += T - ITO[HVTPSindex]
-		else:
-			SPS += (TPS[MENORTPS] - T) * NS
-			T = TPS[MENORTPS]
-			NS -= 1
-			if NS >= N:
-				TA = generarTA()
-				TPS[MENORTPS] = T + TA
+		if TPSW[i] < TPSG[j]:
+			if TPLL <= TPSW[i]:
+				LlegaCliente()
 			else:
-				ITO[MENORTPS] = T
-				TPS[MENORTPS] = HV
-		if T >= TF and NS > 0:
+				Sale(TPSW, i, NSW, W, ITOW)
+		else:
+			if TPLL <= TPSG[j]:
+				LlegaCliente()
+			else:
+				Sale(TPSG, j, NSG, G, ITOG)
+
+		if T <= TF: continue
+		if NSW + NSG > 0:
 			TPLL = HV
+			continue
+		break
 
-	for i in range(len(STO)):
-		STO[i] += T - ITO[i]
+	print "Fin de simulación"
 
-	calcularEImprimirResultados()
+	ImprimirResultados()
