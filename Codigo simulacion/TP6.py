@@ -165,8 +165,10 @@ def SaleG(i):
 		TPSG[i] = T + TA
 
 def ImprimirResultados():
-	PTOW = (1.0*sum(STOW)/len(STOW)) * 100.0/T
-	PTOG = (1.0*sum(STOG)/len(STOG)) * 100.0/T
+
+	SSTOW, SSTOG = sum(STOW), sum(STOG)
+	PTOW = 100 if SSTOW==0 else (1.0*sum(STOW)/len(STOW)) * 100.0/T
+	PTOG = 100 if SSTOG==0 else (1.0*sum(STOG)/len(STOG)) * 100.0/T
 
 	PPAW = CARRW * 100.0 / (CLL + CARRW + CARRG)
 	PPAG = CARRG * 100.0 / (CLL + CARRW + CARRG)
