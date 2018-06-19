@@ -27,7 +27,7 @@ def VariablesDeControl():
 
 def CondicionesIniciales():
 	global T, TF, TPLL, TPSW, TPSG, NSW, NSG, CLL, \
-			ITOW, ITOG, STOW, STOG, CARRW, CARRG
+			ITOW, ITOG, STOW, STOG, CARRW, CARRG, WAG
 
 	T = 0
 	TF = 13140000
@@ -45,6 +45,7 @@ def CondicionesIniciales():
 	STOG = ITOG[:]
 
 	CARRW = CARRG = 0
+	WAG = 0
 
 def MinTPSWorker():
 	return TPSW.index(min(TPSW))
@@ -62,13 +63,18 @@ def GenerarIA():
 		R2 = random.random()
 		X = 25 * R1 + 5
 		Y = m * R2
-		FDP = 2 * X**2 / 1975.0 + X / 375.0 - 1/25.0
+		FDP = 2 * X**2 / 1875.0 + X / 375.0 - 1/25.0
 		if Y <= FDP: break
 	return X
 
-def GenerarTA():
+def GenerarTAG():
 	R = random.random()
-	TA = int(10 + (R * 500) % 120)
+	TA = int(30 + R * 120)
+	return TA
+
+def GenerarTAW():
+	R = random.random()
+	TA = int(5 + R * 50)
 	return TA
 
 def ArrepentimientoWorker():
@@ -87,17 +93,19 @@ def EntraWorker():
 	global NSW, CLL, TPSW, STOW
 	NSW += 1
 	CLL += 1
-	if W > NSW:
+	if NSW <= W:
 		i = HVTPS(TPSW)
-		TA = GenerarTA()
+		TA = GenerarTAW()
 		TPSW[i] = T + TA
 		STOW[i] += T - ITOW[i]
 
 def Worker():
+	global WAG
 	if NSW >= W:
 		if NSG < G:
 			R = random.random()
 			if R < 0.15:
+				WAG += 1
 				Gamer()
 			else:
 				ARR = ArrepentimientoWorker()
@@ -116,9 +124,9 @@ def Gamer():
 	if not ARR:
 		NSG += 1
 		CLL += 1
-		if G > NSG:
+		if NSG <= G:
 			i = HVTPS(TPSG)
-			TA = GenerarTA()
+			TA = GenerarTAG()
 			TPSG[i] = T + TA
 			STOG[i] += T - ITOG[i]
 
@@ -141,7 +149,7 @@ def SaleW(i):
 		ITOW[i] = T
 		TPSW[i] = HV
 	else:
-		TA = GenerarTA()
+		TA = GenerarTAW()
 		TPSW[i] = T + TA
 
 def SaleG(i):
@@ -153,15 +161,12 @@ def SaleG(i):
 		ITOG[i] = T
 		TPSG[i] = HV
 	else:
-		TA = GenerarTA()
+		TA = GenerarTAG()
 		TPSG[i] = T + TA
 
 def ImprimirResultados():
 	PTOW = (1.0*sum(STOW)/len(STOW)) * 100.0/T
 	PTOG = (1.0*sum(STOG)/len(STOG)) * 100.0/T
-
-	print "CARRW = %d" % CARRW
-	print "CARRG = %d" % CARRG
 
 	PPAW = CARRW * 100.0 / (CLL + CARRW + CARRG)
 	PPAG = CARRG * 100.0 / (CLL + CARRW + CARRG)
@@ -173,6 +178,8 @@ def ImprimirResultados():
 	print "- Arrepentidos:"
 	print "  PPAW = %5.1f%%" % PPAW
 	print "  PPAG = %5.1f%%" % PPAG
+	print "- Workers que se pasaron a Gamers:"
+	print "  WAG = %d" % WAG
 
 if __name__ == "__main__":
 	VariablesDeControl()
@@ -200,7 +207,5 @@ if __name__ == "__main__":
 			TPLL = HV
 			continue
 		break
-
-	print "Fin de simulación"
 
 	ImprimirResultados()
