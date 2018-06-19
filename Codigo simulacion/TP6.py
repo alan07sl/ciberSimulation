@@ -30,7 +30,7 @@ def CondicionesIniciales():
 			ITOW, ITOG, STOW, STOG, CARRW, CARRG
 
 	T = 0
-	TF = 10000 # 13140000
+	TF = 13140000
 
 	TPLL = 0
 	TPSW = [HV for _ in xrange(W)]
@@ -56,9 +56,15 @@ def HVTPS(TPS):
 	return TPS.index(HV)
 
 def GenerarIA():
-	R = random.random()
-	IA = int((R * 1000) % 30)
-	return IA
+	m = 1/15.0
+	while True:
+		R1 = random.random()
+		R2 = random.random()
+		X = 25 * R1 + 5
+		Y = m * R2
+		FDP = 2 * X**2 / 1975.0 + X / 375.0 - 1/25.0
+		if Y <= FDP: break
+	return X
 
 def GenerarTA():
 	R = random.random()
@@ -66,15 +72,19 @@ def GenerarTA():
 	return TA
 
 def ArrepentimientoWorker():
-	global NSW, W
-	return NSW - W > 3
+	global CARRW
+	ARR = NSW - W > 3
+	if ARR: CARRW += 1
+	return ARR
 
 def ArrepentimientoGamer():
-	global NSG, G
-	return NSG - G > 5
+	global CARRG
+	ARR = NSG - G > 5
+	if ARR: CARRG += 1
+	return ARR
 
 def EntraWorker():
-	global NSW, CLL, W, T, TPSW, STOW, ITOW
+	global NSW, CLL, TPSW, STOW
 	NSW += 1
 	CLL += 1
 	if W > NSW:
@@ -84,7 +94,6 @@ def EntraWorker():
 		STOW[i] += T - ITOW[i]
 
 def Worker():
-	global NSW, W, NSG, G
 	if NSW >= W:
 		if NSG < G:
 			R = random.random()
@@ -102,7 +111,7 @@ def Worker():
 		EntraWorker()
 
 def Gamer():
-	global NSG, CLL, G, T, TPSG, STOG, ITOG
+	global NSG, CLL, TPSG, STOG
 	ARR = ArrepentimientoGamer()
 	if not ARR:
 		NSG += 1
@@ -121,34 +130,49 @@ def LlegaCliente():
 	TPLL = T + IA
 
 	R = random.random()
-	if R < 0.7:
-		Gamer()
-	else:
-		Worker()
+	Gamer() if R < 0.7 else Worker()
 
-def Sale(TPS, i, NS, M, ITO):
-	global T
-	T = TPS[i]
-	NS -= 1
+def SaleW(i):
+	global T, TPSW, NSW, ITOW
+	T = TPSW[i]
+	NSW -= 1
 
-	if NS < M:
-		ITO[i] = T
-		TPS[i] = HV
+	if NSW < W:
+		ITOW[i] = T
+		TPSW[i] = HV
 	else:
 		TA = GenerarTA()
-		TPS[i] = T + TA
+		TPSW[i] = T + TA
+
+def SaleG(i):
+	global T, TPSG, NSG, ITOG
+	T = TPSG[i]
+	NSG -= 1
+
+	if NSG < G:
+		ITOG[i] = T
+		TPSG[i] = HV
+	else:
+		TA = GenerarTA()
+		TPSG[i] = T + TA
 
 def ImprimirResultados():
-	pass
-	# TODO
-	# PPS = SPS * 1.0 / CLL
-	# PTO = [ e * 100.0 / T for e in STO ]
-	# PPA = CANTARREP * 100.0 / (CLL + CANTARREP)
+	PTOW = (1.0*sum(STOW)/len(STOW)) * 100.0/T
+	PTOG = (1.0*sum(STOG)/len(STOG)) * 100.0/T
 
-	# print "Resultados de la simulacion para N = %d:" % N
-	# print "PPS=%d" % PPS
-	# print "PTO=" + repr([int(round(e)) for e in PTO])
-	# print "PPA=%d" % PPA
+	print "CARRW = %d" % CARRW
+	print "CARRG = %d" % CARRG
+
+	PPAW = CARRW * 100.0 / (CLL + CARRW + CARRG)
+	PPAG = CARRG * 100.0 / (CLL + CARRW + CARRG)
+
+	print "Resultados de la simulacion:"
+	print "- Tiempo ocioso:"
+	print "  PTOW = %5.1f%%" % PTOW
+	print "  PTOG = %5.1f%%" % PTOG
+	print "- Arrepentidos:"
+	print "  PPAW = %5.1f%%" % PPAW
+	print "  PPAG = %5.1f%%" % PPAG
 
 if __name__ == "__main__":
 	VariablesDeControl()
@@ -164,12 +188,12 @@ if __name__ == "__main__":
 			if TPLL <= TPSW[i]:
 				LlegaCliente()
 			else:
-				Sale(TPSW, i, NSW, W, ITOW)
+				SaleW(i)
 		else:
 			if TPLL <= TPSG[j]:
 				LlegaCliente()
 			else:
-				Sale(TPSG, j, NSG, G, ITOG)
+				SaleG(j)
 
 		if T <= TF: continue
 		if NSW + NSG > 0:
