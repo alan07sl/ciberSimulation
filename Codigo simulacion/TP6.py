@@ -12,8 +12,8 @@ import sys, random
 HV = float("inf")
 
 def VariablesDeControl():
-	global G, W
-
+	global G, W , CW
+	CW = 0
 	try:
 		if len(sys.argv) == 3:
 			G = int(sys.argv[1])
@@ -69,23 +69,40 @@ def GenerarIA():
 
 def GenerarTAG():
 	R = random.random()
-	TA = int(30 + R * 120)
+	TA = int(30 + (R * 90))
 	return TA
 
 def GenerarTAW():
 	R = random.random()
-	TA = int(5 + R * 50)
+	TA = int(20 + (R * 40))
 	return TA
 
 def ArrepentimientoWorker():
 	global CARRW
-	ARR = NSW - W > 3
-	if ARR: CARRW += 1
+	ARR = False
+	PCW = NSW - W
+	if PCW >= 3 :
+		R = random.random()
+		if R > 0.15 :
+			print "se arrepiente worker"
+			CARRW = CARRW + 1
+			ARR = True
 	return ARR
 
 def ArrepentimientoGamer():
 	global CARRG
-	ARR = NSG - G > 5
+	ARR = False
+	PCG = NSG - G
+	R = random.random()
+	if PCG == 3 :
+		if R > 0.5 :
+			ARR = True
+	if PCG == 4 :
+		if R > 0.3 :
+			ARR = True
+	if PCG >= 5	:
+		if R > 0.1 :
+			ARR = True
 	if ARR: CARRG += 1
 	return ARR
 
@@ -100,11 +117,12 @@ def EntraWorker():
 		STOW[i] += T - ITOW[i]
 
 def Worker():
-	global WAG
+	global WAG , CW
+	CW = CW + 1
 	if NSW >= W:
 		if NSG < G:
 			R = random.random()
-			if R < 0.15:
+			if R < 0.30:
 				WAG += 1
 				Gamer()
 			else:
@@ -138,7 +156,7 @@ def LlegaCliente():
 	TPLL = T + IA
 
 	R = random.random()
-	Gamer() if R < 0.7 else Worker()
+	Gamer() if R < 0.6 else Worker()
 
 def SaleW(i):
 	global T, TPSW, NSW, ITOW
@@ -182,6 +200,8 @@ def ImprimirResultados():
 	print "  PPAG = %5.1f%%" % PPAG
 	print "- Workers que se pasaron a Gamers:"
 	print "  WAG = %d" % WAG
+	print "la cantidad de workers ingresados son %d" %CW
+	print "la cantidad de workers arrepentidos son %d" %CARRW
 
 if __name__ == "__main__":
 	VariablesDeControl()
