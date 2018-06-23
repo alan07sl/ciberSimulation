@@ -12,8 +12,8 @@ import sys, random
 HV = float("inf")
 
 def VariablesDeControl():
-	global G, W
-
+	global G, W , BENEFICIO
+	BENEFICIO = 0
 	try:
 		if len(sys.argv) == 3:
 			G = int(sys.argv[1])
@@ -69,28 +69,45 @@ def GenerarIA():
 
 def GenerarTAG():
 	R = random.random()
-	TA = int(30 + R * 120)
+	TA = int(10 + (R * 50))
 	return TA
 
 def GenerarTAW():
 	R = random.random()
-	TA = int(5 + R * 50)
+	TA = int(20 + (R * 100))
 	return TA
 
 def ArrepentimientoWorker():
 	global CARRW
-	ARR = NSW - W > 3
-	if ARR: CARRW += 1
+	ARR = False
+	PCW = NSW - W
+	if PCW >= 3 :
+		R = random.random()
+		if R > 0.15 :
+			#print "se arrepiente worker"
+			CARRW = CARRW + 1
+			ARR = True
 	return ARR
 
 def ArrepentimientoGamer():
 	global CARRG
-	ARR = NSG - G > 5
+	ARR = False
+	PCG = NSG - G
+	R = random.random()
+	if PCG == 3 :
+		if R > 0.5 :
+			ARR = True
+	if PCG == 4 :
+		if R >= 0.3 :
+			ARR = True
+	if PCG >= 5	:
+		if R >= 0.1 :
+			ARR = True
 	if ARR: CARRG += 1
 	return ARR
 
 def EntraWorker():
-	global NSW, CLL, TPSW, STOW
+	global NSW, CLL, TPSW, STOW, BENEFICIO
 	NSW += 1
 	CLL += 1
 	if NSW <= W:
@@ -98,19 +115,22 @@ def EntraWorker():
 		TA = GenerarTAW()
 		TPSW[i] = T + TA
 		STOW[i] += T - ITOW[i]
+		BENEFICIO = BENEFICIO + (TA / 10 ) * 2
 
 def Worker():
 	global WAG
 	if NSW >= W:
 		if NSG < G:
 			R = random.random()
-			if R < 0.15:
+			if R < 0.30:
 				WAG += 1
 				Gamer()
+				#print "entre worker a gamer"
 			else:
 				ARR = ArrepentimientoWorker()
 				if not ARR:
 					EntraWorker()
+					#print "entre el worker"
 		else:
 			ARR = ArrepentimientoWorker()
 			if not ARR:
@@ -119,7 +139,7 @@ def Worker():
 		EntraWorker()
 
 def Gamer():
-	global NSG, CLL, TPSG, STOG
+	global NSG, CLL, TPSG, STOG, BENEFICIO
 	ARR = ArrepentimientoGamer()
 	if not ARR:
 		NSG += 1
@@ -129,6 +149,8 @@ def Gamer():
 			TA = GenerarTAG()
 			TPSG[i] = T + TA
 			STOG[i] += T - ITOG[i]
+			BENEFICIO = BENEFICIO + (TA / 10) * 4
+
 
 
 def LlegaCliente():
@@ -138,7 +160,7 @@ def LlegaCliente():
 	TPLL = T + IA
 
 	R = random.random()
-	Gamer() if R < 0.7 else Worker()
+	Gamer() if R < 0.6 else Worker()
 
 def SaleW(i):
 	global T, TPSW, NSW, ITOW
@@ -182,6 +204,7 @@ def ImprimirResultados():
 	print "  PPAG = %5.1f%%" % PPAG
 	print "- Workers que se pasaron a Gamers:"
 	print "  WAG = %d" % WAG
+	print " El beneficio obtenido fue de: %d " % BENEFICIO
 
 if __name__ == "__main__":
 	VariablesDeControl()
