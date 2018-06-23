@@ -69,12 +69,12 @@ def GenerarIA():
 
 def GenerarTAG():
 	R = random.random()
-	TA = int(10 + (R * 50))
+	TA = int(30 + (R * 90))
 	return TA
 
 def GenerarTAW():
 	R = random.random()
-	TA = int(20 + (R * 100))
+	TA = int(10 + (R * 50))
 	return TA
 
 def ArrepentimientoWorker():
