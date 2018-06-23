@@ -57,15 +57,9 @@ def HVTPS(TPS):
 	return TPS.index(HV)
 
 def GenerarIA():
-	m = 1/15.0
-	while True:
-		R1 = random.random()
-		R2 = random.random()
-		X = 25 * R1 + 5
-		Y = m * R2
-		FDP = 2 * X**2 / 1875.0 + X / 375.0 - 1/25.0
-		if Y <= FDP: break
-	return X
+	R = random.random()
+	IA = (600*R + 25)**(0.5)
+	return IA
 
 def GenerarTAG():
 	R = random.random()
